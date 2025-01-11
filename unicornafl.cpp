@@ -463,22 +463,34 @@ class UCAFL {
         }
 
         // These two hooks are for compcov and may not be supported by the arch.
-        err = uc_hook_add(this->uc_, &this->h3_, UC_HOOK_TCG_OPCODE,
-                          (void*)_uc_hook_sub, (void*)this, 1, 0, UC_TCG_OP_SUB,
-                          UC_TCG_OP_FLAG_DIRECT);
 
-        if (err) {
-            ERR("Failed to setup UC_TCG_OP_SUB direct hook.\n");
-            exit(1);
+        int compcov_level = 0;
+        char * compcov = getenv("AFL_COMPCOV_LEVEL");
+        if (compcov_level) {compcov_level = atoi(compcov);}
+
+        if (compcov_level>0)
+        {
+            err = uc_hook_add(this->uc_, &this->h3_, UC_HOOK_TCG_OPCODE,
+                    (void*)_uc_hook_sub, (void*)this, 1, 0, UC_TCG_OP_SUB,
+                    UC_TCG_OP_FLAG_DIRECT);
+
+            if (err) {
+                ERR("Failed to setup UC_TCG_OP_SUB direct hook.\n");
+                exit(1);
+            }
+
         }
 
-        err = uc_hook_add(this->uc_, &this->h4_, UC_HOOK_TCG_OPCODE,
-                          (void*)_uc_hook_sub_cmp, (void*)this, 1, 0,
-                          UC_TCG_OP_SUB, UC_TCG_OP_FLAG_CMP);
+        if (compcov_level>1)
+        {
+            err = uc_hook_add(this->uc_, &this->h4_, UC_HOOK_TCG_OPCODE,
+                            (void*)_uc_hook_sub_cmp, (void*)this, 1, 0,
+                            UC_TCG_OP_SUB, UC_TCG_OP_FLAG_CMP);
 
-        if (err) {
-            ERR("Failed to setup UC_TCG_OP_SUB cmp hook.\n");
-            exit(1);
+            if (err) {
+                ERR("Failed to setup UC_TCG_OP_SUB cmp hook.\n");
+                exit(1);
+            }
         }
     }
 
